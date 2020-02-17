@@ -26,6 +26,7 @@
 # rvpa1.9 - maa.tune（tuning時だけ使用のmaa）, waa.catch（資源と漁獲でwaaが違う場合に対応）を使用可能に．index=NULLでtune=FALSEのときエラーが出ないように修正．
 # rvpa1.9.2 - 各indexに対する分散に制約をかけられるように修正。例えばindexが５本ある場合、sigma.constraint=c(1,2,2,3,3)とすると2,3本めと4,5本目のindexに対する分散は等しいとして推定する。180522中山
 # rvpa1.9.3 - Popeの近似式を一般化
+# rvpa1.9.4 - ridge vpaにF centering optionを追加 (penalty = "p")
 ##
 
 #' csvデータを読み込んでvpa用のデータを作成する関数
@@ -33,6 +34,7 @@
 #' @param caa catch at age
 #' @param waa weight at age
 #' @param maa maturity at age
+#' @encoding UTF-8
 #'
 #' @export
 
@@ -483,6 +485,7 @@ qbs.f2 <- function(p0,index, Abund, nindex, index.w, fixed.index.var=NULL){
 #' @param eta  Fのpenaltyを分けて与えるときにeta.ageで指定した年齢への相対的なpenalty (0~1)
 #' @param eta.age  Fのpenaltyを分けるときにetaを与える年齢(0 = 0歳（加入）,0:1 = 0~1歳)
 #' @param tmb.file  TMB=TRUEのとき使用するcppファイルの名前
+#' @encoding UTF-8
 #' 
 #' @export
 #' 
@@ -573,7 +576,7 @@ vpa <- function(
   # }
     
   # inputデータをリスト化
-
+  
   argname <- ls()  # 関数が呼び出されたばかりのときのls()は引数のみが入っている
   arglist <- lapply(argname,function(xx) eval(parse(text=xx)))
   names(arglist) <- argname
@@ -1067,7 +1070,9 @@ vpa <- function(
         }
       }     
       
-      if (penalty=="s") obj <- (1-lambda)*obj + lambda*sum((abs(saa[,ny]-apply(saa[, years %in% tf.year],1,get(stat.tf))))^beta)
+      if (penalty=="f") obj <- (1-lambda)*obj + lambda*sum((abs(faa[1:(na[ny]-1),ny]-apply(faa[1:(na[ny]-1), years %in% tf.year],1,get(stat.tf))))^beta)
+       
+      if (penalty=="s") obj <- (1-lambda)*obj + lambda*sum((abs(saa[1:(na[ny]-1),ny]-apply(saa[1:(na[ny]-1), years %in% tf.year],1,get(stat.tf))))^beta)
       
       if (!is.null(sel.rank)) obj <- obj+1000000*sum((rank(saa[,ny])-sel.rank)^2)
       
@@ -1180,6 +1185,7 @@ vpa <- function(
  
     Ab_type <- ifelse(abund=="SSB", 1, ifelse(abund=="N", 2, 3))
     Ab_type_age <- ifelse(is.na(min.age),0,min.age)
+    Ab_type_max_age <- ifelse(is.na(max.age),0,max.age)+1
     
     if(is.null(dat$maa.tune)) MAA <- as.matrix(dat$maa) else MAA <- as.matrix(dat$maa.tune)
     if (is.na(af[1])) af <- rep(0,nindex)
@@ -1205,7 +1211,7 @@ vpa <- function(
     if (is.null(eta)) eta <- -1.0
     eta_age <- rep(1,length(p.init))
     eta_age[eta.age+1] <- 0
-    data2 <- list(Est=ifelse(est.method=="ls",0,1),b_fix=as.numeric(b_fix),alpha=alpha,lambda=lambda,beta=beta,Ab_type=Ab_type,Ab_type_age=Ab_type_age,w=index.w,af=af,CATCH=t(as.matrix(dat$caa)),WEI=t(as.matrix(dat$waa)),MAT=t(MAA),M=t(as.matrix(dat$M)),CPUE=t(index2),MISS=t(ifelse(index2==0,1,0)),Last_Catch_Zero=ifelse(isTRUE(last.catch.zero),1,0),sigma_constraint=sigma_constraint,eta=eta,eta_age=eta_age)
+    data2 <- list(Est=ifelse(est.method=="ls",0,1),b_fix=as.numeric(b_fix),alpha=alpha,lambda=lambda,beta=beta,Ab_type=Ab_type,Ab_type_age=Ab_type_age,Ab_type_max_age=Ab_type_max_age,w=index.w,af=af,CATCH=t(as.matrix(dat$caa)),WEI=t(as.matrix(dat$waa)),MAT=t(MAA),M=t(as.matrix(dat$M)),CPUE=t(index2),MISS=t(ifelse(index2==0,1,0)),Last_Catch_Zero=ifelse(isTRUE(last.catch.zero),1,0),sigma_constraint=sigma_constraint,eta=eta,eta_age=eta_age)
     
     parameters <- list(
       log_F=log(p.init)
@@ -1302,6 +1308,7 @@ Ft <- mean(faa[,ny],na.rm=TRUE)
 #' VPAの推定値についてprofile likelihood (one parameter)を実施する
 #'
 #' @param res vpa関数の出力値
+#' @encoding UTF-8
 #'
 #' @export
 #' 
@@ -1444,6 +1451,7 @@ profile.likelihood.vpa.B <- function(res,Alpha=0.95,min.p=1.0E-6,max.p=1,L=20,me
 #' bootstrapを実施する
 #'
 #' @param res vpaの出力値
+#' @encoding UTF-8
 #'
 #' @export
 
@@ -1536,6 +1544,7 @@ cv.est <- function(res,n=5){
 #' レトロスペクティブ解析の実施
 #'
 #' @param res VPAの出力
+#' @encoding UTF-8
 #' @export
 #' 
 
