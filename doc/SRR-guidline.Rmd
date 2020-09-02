@@ -71,7 +71,7 @@ BHとRIでは再生産関係がほぼ直線になるため、HSを選択した�
 
 ## 2. 最小絶対値法や残差の自己相関の検討
 
-サンプル数が少ない場合や残差が正規分布に従っていない場合（3節参照）、外れ値に対して頑健な推定方法である最小絶対値法（中央値推定）が有効なオプションとして考えられます。
+サンプル数が少ない場合や残差が正規分布に従っていない場合（3節参照）、外れ値に対して頑健な推定方法である最小絶対値法（中央値 推定）が有効なオプションとして考えられます。
 また、加入の残差が環境影響などにより時間的なトレンドをもつ場合には（4節参照）、残差の自己相関を考慮する方法が考えられます。
 ここでは、これらの手法により再生産関係がどの程度変わるのかをチェックします。
 
@@ -239,8 +239,6 @@ points(resSR$pred$SSB,resSR$pred$R,col=2,type="l",lwd=3)
 診断結果：1992年・2000年のデータを除くとbの推定値が大きくなる。
 そのほかのパラメータは各データの除去に対して比較的頑健である。  
 
-  
-
 ## 7. プロファイル尤度
 
 パラメータa, bの値を変えたときに尤度がどの程度変化するかを解析します。ここでは、sdやrhoは最尤推定値に固定しています。この結果とブートストラップ信頼区間およびジャックナイフ解析の結果も同時に図示します。
@@ -270,6 +268,57 @@ legend("bottomleft",c("Bootstrap CI(0.8)","Jackknife"),lty=1:0,pch=c("",1),col=c
 
 診断結果：パラメータbの値が大きくなっても尤度の変化は比較的小さい
   
+## 7. パラメータ間相関
 
+パラメータa, bの値がどれだけ相関を持つか、相関係数を算出します。
+パラメータa, b間の相関が強いと推定が不安定になっている可能性があります。
+
+```{r,warning=FALSE}
+res_corSR <- corSR(resSR=resL1)
+res_corSR$cor[1,2]
+```
+相関係数の値は小さく、パラメータa,bは関連は小さい。
+
+## 8. スティープネス
+
+SR=BH,RIにおいて、F=0の時の初期資源量から理論上求められる加入量R0に対する、0.2B0の時の加入量Rの比であるスティープネスhが計算されます。
+SR=BHでは　h = (a 0.2B0 / (1 + b 0.2B0) ) / R0 = a 0.2SPR0/( (1 + b 0.2B0))　となります。
+SR=RIでは　h = a 0.2B0 exp (-b 0.2B0) / R0 = a 0.2SPR0 exp (-b 0.2B0)　となります。
+スティープネスは再生産モデルの密度補償効果の程度を示します。0.2から1の間の値を取り、0.2の時は密度補償効果がないことを、1の時は親魚量に関わらず一定の加入量が得られることを意味します。
+また、SR=HSのときはPunt et al. (2013)[https://doi.org/10.1093/icesjms/fst162]に従い、　h = 1 - b/B0　と定義します。
+
+```{r,warning=FALSE}
+year <- as.character(max(res_vpa$input$rec.year))
+res_steepness <- calc_steepness(SR=resL2$input$SR,rec_pars=resL2$pars,M=res_vpa$input$dat$M[,year],waa=res_vpa$input$dat$waa[,year],maa=res_vpa$input$dat$maa[,year])
+res_steepness$h
+```
+
+パラメータa, bの値を変えたときにスティープネスがどの程度変化するかを解析します。
+
+```{r,warning=FALSE}
+resSR <- resL2
+ngrid <- 100
+a.grid <- seq(resSR$pars$a*0.5,resSR$pars$a*1.5,length=ngrid)
+b.grid <- seq(min(SRdata$SSB),max(SRdata$SSB),length=ngrid)
+ba.grids <- expand.grid(b.grid,a.grid)
+names(ba.grids) <- c("b","a")
+h.res.list <- list()
+h.res.list <- lapply(1:nrow(ba.grids),function(i)
+  calc_steepness(SR=resSR$input$SR,rec_pars=ba.grids[i,],M=res_vpa$input$dat$M[,year],waa=res_vpa$input$dat$waa[,year],maa=res_vpa$input$dat$maa[,year]) )
+h.res <- c()
+for(i in 1:nrow(ba.grids)){
+  h.res <- cbind(h.res,h.res.list[[i]]$h)
+}
+
+image(b.grid,a.grid,matrix(h.res,nrow=ngrid),ann=F,col=cm.colors(12),
+      ylim=c(resSR$pars$a*0.5,resSR$pars$a*1.5),xlim=c(min(SRdata$SSB),max(SRdata$SSB)))
+par(new=T, xaxs="i",yaxs="i")
+contour(b.grid,a.grid,matrix(h.res,nrow=ngrid),
+        ylim=c(resSR$pars$a*0.5,resSR$pars$a*1.5),xlim=c(min(SRdata$SSB),max(SRdata$SSB)),
+        xlab="b",ylab="a",main="Profile steepness")
+```
+
+
+スティープネスの値から十分な密度補償効果があると考えられる。
 
 <!-- ## 7. まとめ -->
