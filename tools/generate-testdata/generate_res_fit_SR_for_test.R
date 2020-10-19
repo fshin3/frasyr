@@ -34,3 +34,21 @@ SRpma_HS_L1_AR1_outAR0_repoptT <- fit.SR(SRdata_pma, SR = "HS", method = "L1",
 
 savefilenameresfres <- sprintf("./inst/extdata/SRpma_HS_L1_AR1_outAR0_repoptT.rda")
 save(SRpma_HS_L1_AR1_outAR0_repoptT,file=savefilenameresfres)
+
+
+# for fitSR regime
+data("res_vpa")
+SRdata <- get.SRdata(res_vpa)
+
+regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
+
+regimeSR.list <- list()
+for(i in 1:nrow(regimeSRmodel.list)){
+  regimeSR.list[[i]] <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+}
+
+for(i in 1:nrow(regimeSRmodel.list)){
+  assign(sprintf("regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), regimeSR.list[[i]])
+  savefilename <- sprintf("./inst/extdata/regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
+  save(list=paste("regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
+}
