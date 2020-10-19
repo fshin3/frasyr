@@ -154,7 +154,31 @@ save(boot_res_pma_median_pars,file = "./inst/extdata/boot_res_pma_median_pars.rd
 #}
 #save(jack_res_pma_pars,file="./inst/extdata/jack_res_pma_pars.rda")
 
-# profile likelihood (関数を定義しているわけではないので無視)----
+# profile likelihood ----
+data(res_vpa)
+SRdata <- get.SRdata(res_vpa)
+
+# fitSR & prof.likSR----
+SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
+SR.list <- list()
+prof.likSR.list <- list()
+
+for (i in 1:nrow(SRmodel.list)) {
+  SR.list[[i]] <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i],
+                         AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+  prof.likSR.list[[i]] <- prof.likSR(SR.list[[i]])
+}
+
+# fitSRregime & prof.likSR----
+regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"),L.type = c("L1", "L2"))
+regimeSR.list <- list()
+prof.likSR.regime.list <- list()
+
+for(i in 1:nrow(regimeSRmodel.list)){
+  regimeSR.list[[i]] <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+  prof.likSR.regime.list <- prof.likSR(regimeSR.list[[i]])
+}
+
 
 #ngrid <- 100
 #a.grid <- seq(SRmodel.select$pars$a*0.5,SRmodel.select$pars$a*1.5,length=ngrid)
