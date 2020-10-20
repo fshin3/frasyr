@@ -175,7 +175,7 @@ test_that("output value check",{
   SRdata <- get.SRdata(res_vpa)
 
   # fitSRregime & prof.likSR----
-  regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
+  regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
 
   #for (i in 1:nrow(regimeSRmodel.list)) {
   #  res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
