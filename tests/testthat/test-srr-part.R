@@ -76,7 +76,7 @@ test_that("oututput value check",{
 
   #上記条件での結果の読み込み
   load(system.file("extdata","boot_res_pma_median_pars.rda",package = "frasyr"))
-  
+
   #結果の照合
   expect_equal(boot_res_pma_median_pars_check/as.numeric(boot_res_pma_median_pars[,-4]),rep(1,3),tolerance=0.01,
                scale=0.01)
@@ -88,47 +88,113 @@ test_that("output value check",{
   load(system.file("extdata","SRdata_pma.rda",package = "frasyr"))
   SRdata = SRdata_pma
   SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
-  
+
   # regime_year = ceiling(mean(SRdata$year))
   regime_year = 1999
   regime1 = min(SRdata$year):(regime_year-1); regime2 = regime_year:max(SRdata$year);
   SRdata1 = list(year=regime1, R=SRdata$R[SRdata$year %in% regime1],SSB=SRdata$SSB[SRdata$year %in% regime1])
   SRdata2 = list(year=regime2, R=SRdata$R[SRdata$year %in% regime2],SSB=SRdata$SSB[SRdata$year %in% regime2])
-  
+
 #  for (i in 1:nrow(SRmodel.list)) {
-  for (i in 1) {  
+  for (i in 1) {
     resSR1 <- fit.SR(SRdata1, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i],AR = 0, hessian = FALSE,length=20)
     resSR2 <- fit.SR(SRdata2, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i],AR = 0, hessian = FALSE,length=20)
     resSRregime <- fit.SRregime(SRdata, SR = as.character(SRmodel.list$SR.rel[i]), method = as.character(SRmodel.list$L.type[i]), regime.year = regime_year, regime.key = 0:1, regime.par = c("a","b","sd"), use.fit.SR = TRUE)
-    
+
     # boot strap ----
     nboot <- 3
     boot_resSR1_check <- boot.SR(resSR1,n=nboot)
     boot_resSR2_check <- boot.SR(resSR2,n=nboot)
     boot_resSRregime_check <- boot.SR(resSRregime,n=nboot)
-    
+
     boot_resSR1_median_pars_a <-median(sapply(1:boot_resSR1_check$input$n, function(i) boot_resSR1_check[[i]]$pars$a))
     boot_resSR1_median_pars_b <-median(sapply(1:boot_resSR1_check$input$n, function(i) boot_resSR1_check[[i]]$pars$b))
     boot_resSR1_median_pars_sd <-median(sapply(1:boot_resSR1_check$input$n, function(i) boot_resSR1_check[[i]]$pars$sd))
     boot_resSR1_median_pars_check <- c(boot_resSR1_median_pars_a,boot_resSR1_median_pars_b,boot_resSR1_median_pars_sd)
-    
+
     boot_resSR2_median_pars_a <-median(sapply(1:boot_resSR2_check$input$n, function(i) boot_resSR2_check[[i]]$pars$a))
     boot_resSR2_median_pars_b <-median(sapply(1:boot_resSR2_check$input$n, function(i) boot_resSR2_check[[i]]$pars$b))
     boot_resSR2_median_pars_sd <-median(sapply(1:boot_resSR2_check$input$n, function(i) boot_resSR2_check[[i]]$pars$sd))
     boot_resSR2_median_pars_check <- c(boot_resSR2_median_pars_a,boot_resSR2_median_pars_b,boot_resSR2_median_pars_sd)
-    
+
     boot_resSRregimeSR1_median_pars_a <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$a[1]))
     boot_resSRregimeSR1_median_pars_b <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$b[1]))
     boot_resSRregimeSR1_median_pars_sd <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$sd[1]))
     boot_resSRregimeSR1_median_pars_check <- c(boot_resSRregimeSR1_median_pars_a,boot_resSRregimeSR1_median_pars_b,boot_resSRregimeSR1_median_pars_sd)
-    
+
     boot_resSRregimeSR2_median_pars_a <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$a[2]))
     boot_resSRregimeSR2_median_pars_b <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$b[2]))
     boot_resSRregimeSR2_median_pars_sd <-median(sapply(1:boot_resSRregime_check$input$n, function(i) boot_resSRregime_check[[i]]$pars$sd[2]))
     boot_resSRregimeSR2_median_pars_check <- c(boot_resSRregimeSR2_median_pars_a,boot_resSRregimeSR2_median_pars_b,boot_resSRregimeSR2_median_pars_sd)
-    
+
     # レジームを完全に分けたときのfit.SRregimeの結果とfit.SRの結果が一致するかのテスト
     expect_equal(boot_resSR1_median_pars_check/boot_resSRregimeSR1_median_pars_check,rep(1,3),tolerance=0.5,scale=0.01)
     expect_equal(boot_resSR2_median_pars_check/boot_resSRregimeSR2_median_pars_check,rep(1,3),tolerance=0.5,scale=0.01)
   }
+})
+
+context("SR profile likelyhood")
+test_that("output value check",{
+
+  # load vpa data and format them to fitSR ----
+  data(res_vpa)
+  SRdata <- get.SRdata(res_vpa)
+
+  # fitSR & prof.likSR----
+  SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
+
+
+  for (i in 1:nrow(SRmodel.list)) {
+    resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+    prof.likSR.list.check <- prof.likSR(resSR)
+    assign(sprintf("res_proflikSR_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), prof.likSR.list.check)
+  }
+
+  # load res_proflikSR and check them on each resSR ----
+
+  testcontents =c("prof.lik","ba.grid")
+
+  for (i in 1:nrow(SRmodel.list)) {
+    i<-1
+    filename <- sprintf("res_proflikSR_%s_%s_AR%d_outAR%d.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i])
+    load(system.file("extdata",filename,package = "frasyr"))
+
+    for(j in 1:length(testcontents)){
+      expect_equal(eval(parse(text=paste("res_proflikSR_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]),"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSR_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]),"_check$",testcontents[j],sep=""))))
+    }
+  }
+
+})
+
+
+context("SRregime profile likelyhood")
+test_that("output value check",{
+
+  # load vpa data and format them to fitSR ----
+  data(res_vpa)
+  SRdata <- get.SRdata(res_vpa)
+
+  # fitSRregime & prof.likSR----
+  regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
+
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+    prof.likSR.list.check <- prof.likSR(res_regimeSR)
+    assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
+  }
+
+  # load res_proflikSRregime and check them on each resSR ----
+  testcontents =c("prof.lik","ba.grid")
+
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    filename <- sprintf("res_proflikSRregime_%s_%s.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i])
+
+    load(system.file("extdata",filename,package = "frasyr"))
+
+    for(j in 1:length(testcontents)){
+      expect_equal(eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"_check$",testcontents[j],sep=""))))
+
+    }
+  }
+
 })

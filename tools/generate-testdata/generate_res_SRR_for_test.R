@@ -154,7 +154,36 @@ save(boot_res_pma_median_pars,file = "./inst/extdata/boot_res_pma_median_pars.rd
 #}
 #save(jack_res_pma_pars,file="./inst/extdata/jack_res_pma_pars.rda")
 
-# profile likelihood (関数を定義しているわけではないので無視)----
+# profile likelihood ----
+data(res_vpa)
+SRdata <- get.SRdata(res_vpa)
+
+# fitSR & prof.likSR----
+SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
+
+for (i in 1:nrow(SRmodel.list)) {
+  resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+
+  assign(sprintf("res_proflikSR_%s_%s_AR%d_outAR%d",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), prof.likSR(resSR))
+
+  filename <- sprintf("./inst/extdata/res_proflikSR_%s_%s_AR%d_outAR%d.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i])
+
+  save(list=paste("res_proflikSR_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]), sep=""), file=filename)
+}
+
+# fitSRregime & prof.likSR----
+regimeSRmodel.list <- expand.grid(SR.rel = c("HS"),L.type = c("L1", "L2"))
+
+for(i in 1:nrow(regimeSRmodel.list)){
+  res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+
+  assign(sprintf("res_proflikSRregime_%s_%s",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR(res_regimeSR))
+
+  filename <- sprintf("./inst/extdata/res_proflikSRregime_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
+
+  save(list=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""), file=filename )
+}
+
 
 #ngrid <- 100
 #a.grid <- seq(SRmodel.select$pars$a*0.5,SRmodel.select$pars$a*1.5,length=ngrid)

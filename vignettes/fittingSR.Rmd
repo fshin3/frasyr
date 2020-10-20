@@ -56,7 +56,7 @@ resL1outer = fit.SR(SRdata, SR = "HS", method = "L1", out.AR = TRUE, AR = 1)
 resL2inner = fit.SR(SRdata, SR = "HS", method = "L2", out.AR = FALSE, AR = 1)
 ```
 
-この再生産関係の妥当性はモデル選択によって検証する必要があります。説明は (./Diagnostics-for-SR.Rmd)を参照してください。
+この再生産関係の妥当性はモデル選択によって検証する必要があります。説明は (https://github.com/ichimomo/frasyr/wiki/Diagnostics-for-Stock-Recruitment-Relationships)を参照してください。
 
 ##結果の出力と図示
 
