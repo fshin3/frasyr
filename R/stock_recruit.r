@@ -1654,7 +1654,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
 
       if (!is.null(resSR$input$regime.year)) {
         for(i in 1:length(resSR$input$regime.year)) {
-          regime[resSR$input$SRdata$year>=resSR$input$regime.year[i]] <- resSR$input$regime.key[i+1]
+          regime[resSR$input$SRdata$year>=resSR$input$regime.year[i]] <- regime.key[i+1]
         }
       }
 
@@ -1704,10 +1704,10 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
-          opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
 
           # add rep.opt
-          # opt <- optim(init,resSR$obj.f2)
+          opt <- optim(init,resSR$obj.f2)
           #if (rep.opt) {
           for (i in 1:100) {
             opt2 <- optim(opt$par,resSR$obj.f2)
@@ -1715,7 +1715,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             opt <- opt2
           }
           #}
-          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=hessian)
+          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
 
         })))
@@ -1723,10 +1723,10 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*0.001,
           #             upper=x*1000,method="L-BFGS-B")
-          opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
 
           # add rep.opt
-          #opt <- optim(init,resSR$obj.f2)
+          opt <- optim(init,resSR$obj.f2)
           #if (rep.opt) {
           for (i in 1:100) {
             opt2 <- optim(opt$par,resSR$obj.f2)
@@ -1734,7 +1734,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             opt <- opt2
           }
           #}
-          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=hessian)
+          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
         })))
       }
