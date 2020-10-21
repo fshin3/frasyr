@@ -336,8 +336,8 @@ fit.SR <- function(SRdata,
 #' @param p0 \code{optim}で設定する初期値
 #' @encoding UTF-8
 # #' @export
-#' @noRd  
-#' 
+#' @noRd
+#'
 fit.SRalpha <- function(SRdata,
                    SR="HS",
                    alpha=0,
@@ -1644,17 +1644,97 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         b[ab_order[2]] <- par_b
         resSR$obj.f(a=a,b=b)
       }
+
+      # add objects for rep.opt
+      N <- length(resSR$input$SRdata$R)
+      regime.key0 = resSR$input$regime.key
+      unique.key = unique(resSR$input$regime.key)
+      regime.key = sapply(1:length(regime.key0), function(i) which(unique.key == regime.key0[i]))
+      regime <- a_key <- b_key <- sd_key <- rep(1,N)
+
+      if (!is.null(resSR$input$regime.year)) {
+        for(i in 1:length(resSR$input$regime.year)) {
+          regime[resSR$input$SRdata$year>=resSR$input$regime.year[i]] <- resSR$input$regime.key[i+1]
+        }
+      }
+
+      if ("a" %in% resSR$input$regime.par) a_key <- regime
+      if ("b" %in% resSR$input$regime.par) b_key <- regime
+      if ("sd" %in% resSR$input$regime.par) sd_key <- regime
+
+      a_grid_repopt <- NULL
+      for(i in unique(a_key)){
+        a_range_repopt<-range(resSR$input$SRdata$R[a_key==i]/resSR$input$SRdata$SSB[a_key==i])
+        a_grid_repopt <- cbind(a_grid_repopt,seq(a_range_repopt[1],a_range_repopt[2],length=resSR$input$length))
+      }
+      b_grid_repopt <- NULL
+      for(i in unique(b_key)){
+        if (resSR$input$SR=="HS") {
+          b_range_repopt <- range(resSR$input$SRdata$SSB[b_key==i])
+        } else {b_range_repopt <- range(1/resSR$input$SRdata$SSB[b_key==i])}
+        b_grid_repopt <- cbind(b_grid_repopt,seq(b_range_repopt[1],b_range_repopt[2],length=resSR$input$length))
+      }
+      ab_grid <- expand.grid(data.frame(a_grid_repopt,b_grid_repopt)) %>% as.matrix()
+      b_range_repopt <- apply(b_grid_repopt,2,range)
+
+      if (is.null(resSR$input$p0)) {
+        use.fit.SR = TRUE # fit.SRを使うことにする。
+        if (use.fit.SR) {
+          fit_SR_res = fit.SR(resSR$input$SRdata, SR = resSR$input$SR, method = resSR$input$method, w = resSR$input$w, AR = 0)
+          init <- c(rep(fit_SR_res$opt$par[1],max(a_key)),rep(fit_SR_res$opt$par[2],max(b_key)))
+        } else {
+          init_list <- sapply(1:nrow(ab_grid), function(j) {
+            obj.f(a=ab_grid[j,1:max(a_key)],b=ab_grid[j,(1+max(a_key)):(max(a_key)+max(b_key))])
+          })
+
+          ab_init <- as.numeric(ab_grid[which.min(init_list),])
+          init <- log(ab_init[1:max(a_key)])
+          if (resSR$input$SR=="HS") {
+            for(i in unique(b_key)) {
+              init <- c(init,-log(max(0.000001,(max(resSR$input$SRdata$SSB[b_key==i])-min(resSR$input$SRdata$SSB[b_key==i]))/max(0.000001,(ab_init[max(a_key)+i]-min(resSR$input$SRdata$SSB[b_key==i])))-1)))
+            }
+          } else {
+            init <- c(init, log(ab_init[(max(a_key)+1):(max(a_key)+max(b_key))]))
+          }
+        }
+      } else {
+        init <- resSR$input$p0
+      }
+
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
           opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+
+          # add rep.opt
+          # opt <- optim(init,resSR$obj.f2)
+          #if (rep.opt) {
+          for (i in 1:100) {
+            opt2 <- optim(opt$par,resSR$obj.f2)
+            if (abs(opt$value-opt2$value)<1e-6) break
+            opt <- opt2
+          }
+          #}
+          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=hessian)
           opt$value
+
         })))
       } else {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*0.001,
           #             upper=x*1000,method="L-BFGS-B")
           opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+
+          # add rep.opt
+          #opt <- optim(init,resSR$obj.f2)
+          #if (rep.opt) {
+          for (i in 1:100) {
+            opt2 <- optim(opt$par,resSR$obj.f2)
+            if (abs(opt$value-opt2$value)<1e-6) break
+            opt <- opt2
+          }
+          #}
+          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=hessian)
           opt$value
         })))
       }
@@ -1924,7 +2004,7 @@ bootSR.ggplot = function(boot.res, CI=0.80) {
 }
 
 #' 再生産関係の推定パラメータの相関を出力する関数
-#' 
+#'
 #' @inheritParams fit.SR
 #' @inheritParams fit.SRregime
 #' @param resSR \code{fit.SR}または\code{fit.SRregime}のオブジェクト
@@ -1960,9 +2040,9 @@ corSR = function(resSR) {
 }
 
 #' Steepness (h) と関連するパラメータ (SB0,R0,B0)を計算する関数
-#' 
-#' @param SR "HS", "BH", "RI"のいずれか 
-#' @param rec_pars 再生産関係のパラメータで\code{rec_pars$a},\code{rec_pars$b}で使用する 
+#'
+#' @param SR "HS", "BH", "RI"のいずれか
+#' @param rec_pars 再生産関係のパラメータで\code{rec_pars$a},\code{rec_pars$b}で使用する
 #' @param M 年齢別自然死亡係数 (ベクトルで与えるか、年齢共通の場合\code{M=0.4}のようにしてもよい)
 #' @param waa （親魚量の）年齢別体重
 #' @param maa 年齢別親魚量
@@ -2001,13 +2081,13 @@ calc_steepness = function(SR="HS",rec_pars,M,waa,maa,plus_group=TRUE) {
   }
   NAA0 = 1
   for (i in 1:(length(waa)-1)) {
-    NAA0 = c(NAA0,rev(NAA0)[1]*exp(-M[i])) 
+    NAA0 = c(NAA0,rev(NAA0)[1]*exp(-M[i]))
   }
   if (plus_group) NAA0[length(NAA0)] = rev(NAA0)[1]/(1-exp(-1*rev(M)[1]))
   BAA0 = NAA0*waa
   SSB0 = BAA0*maa
   SPR0 = sum(SSB0) #get.SRRと一致 (testに使える)
-  
+
   # 再生産関係とy=(1/SPR0)*xの交点を求める
   rec_a = rec_pars$a
   rec_b = rec_pars$b
@@ -2029,7 +2109,7 @@ calc_steepness = function(SR="HS",rec_pars,M,waa,maa,plus_group=TRUE) {
     R0 = SB0/SPR0
     h = (rec_a*0.2*SB0*exp(-rec_b*0.2*SB0))/R0
   }
-  
+
   B0 = sum(R0*BAA0)
   Res = data.frame(SPR0 = SPR0, SB0 = SB0, R0 = R0, B0 = B0, h = h)
   return(Res)
