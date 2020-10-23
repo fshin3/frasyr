@@ -133,7 +133,7 @@ test_that("output value check",{
   }
 })
 
-context("profile likelyhood")
+context("SR profile likelyhood")
 test_that("output value check",{
 
   # load vpa data and format them to fitSR ----
@@ -167,7 +167,7 @@ test_that("output value check",{
 })
 
 
-context("profile likelyhood regime")
+context("SRregime profile likelyhood")
 test_that("output value check",{
 
   # load vpa data and format them to fitSR ----
@@ -175,26 +175,26 @@ test_that("output value check",{
   SRdata <- get.SRdata(res_vpa)
 
   # fitSRregime & prof.likSR----
-  regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
+  regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
 
-  #for (i in 1:nrow(regimeSRmodel.list)) {
-  #  res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
-  #  prof.likSR.list.check <- prof.likSR(res_regimeSR)
-  #  assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
-  #}
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+    prof.likSR.list.check <- prof.likSR(res_regimeSR)
+    assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
+  }
 
   # load res_proflikSRregime and check them on each resSR ----
   testcontents =c("prof.lik","ba.grid")
 
-  #for (i in 1:nrow(regimeSRmodel.list)) {
-  #  filename <- sprintf("res_proflikSRregime_%s_%s.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i])
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    filename <- sprintf("res_proflikSRregime_%s_%s.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i])
 
-  #  load(system.file("extdata",filename,package = "frasyr"))
+    load(system.file("extdata",filename,package = "frasyr"))
 
-  #  for(j in 1:length(testcontents)){
-  #    expect_equal(eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"_check$",testcontents[j],sep=""))))
+    for(j in 1:length(testcontents)){
+      expect_equal(eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"_check$",testcontents[j],sep=""))))
 
-  #  }
-  #}
+    }
+  }
 
 })
