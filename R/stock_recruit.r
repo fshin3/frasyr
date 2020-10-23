@@ -1645,62 +1645,6 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         resSR$obj.f(a=a,b=b)
       }
 
-      # add objects for rep.opt
-      N <- length(resSR$input$SRdata$R)
-      regime.key0 = resSR$input$regime.key
-      unique.key = unique(resSR$input$regime.key)
-      regime.key = sapply(1:length(regime.key0), function(i) which(unique.key == regime.key0[i]))
-      regime <- a_key <- b_key <- sd_key <- rep(1,N)
-
-      if (!is.null(resSR$input$regime.year)) {
-        for(i in 1:length(resSR$input$regime.year)) {
-          regime[resSR$input$SRdata$year>=resSR$input$regime.year[i]] <- regime.key[i+1]
-        }
-      }
-
-      if ("a" %in% resSR$input$regime.par) a_key <- regime
-      if ("b" %in% resSR$input$regime.par) b_key <- regime
-      if ("sd" %in% resSR$input$regime.par) sd_key <- regime
-
-      a_grid_repopt <- NULL
-      for(i in unique(a_key)){
-        a_range_repopt<-range(resSR$input$SRdata$R[a_key==i]/resSR$input$SRdata$SSB[a_key==i])
-        a_grid_repopt <- cbind(a_grid_repopt,seq(a_range_repopt[1],a_range_repopt[2],length=resSR$input$length))
-      }
-      b_grid_repopt <- NULL
-      for(i in unique(b_key)){
-        if (resSR$input$SR=="HS") {
-          b_range_repopt <- range(resSR$input$SRdata$SSB[b_key==i])
-        } else {b_range_repopt <- range(1/resSR$input$SRdata$SSB[b_key==i])}
-        b_grid_repopt <- cbind(b_grid_repopt,seq(b_range_repopt[1],b_range_repopt[2],length=resSR$input$length))
-      }
-      ab_grid <- expand.grid(data.frame(a_grid_repopt,b_grid_repopt)) %>% as.matrix()
-      b_range_repopt <- apply(b_grid_repopt,2,range)
-
-      if (is.null(resSR$input$p0)) {
-        use.fit.SR = TRUE # fit.SRを使うことにする。
-        if (use.fit.SR) {
-          fit_SR_res = fit.SR(resSR$input$SRdata, SR = resSR$input$SR, method = resSR$input$method, w = resSR$input$w, AR = 0)
-          init <- c(rep(fit_SR_res$opt$par[1],max(a_key)),rep(fit_SR_res$opt$par[2],max(b_key)))
-        } else {
-          init_list <- sapply(1:nrow(ab_grid), function(j) {
-            obj.f(a=ab_grid[j,1:max(a_key)],b=ab_grid[j,(1+max(a_key)):(max(a_key)+max(b_key))])
-          })
-
-          ab_init <- as.numeric(ab_grid[which.min(init_list),])
-          init <- log(ab_init[1:max(a_key)])
-          if (resSR$input$SR=="HS") {
-            for(i in unique(b_key)) {
-              init <- c(init,-log(max(0.000001,(max(resSR$input$SRdata$SSB[b_key==i])-min(resSR$input$SRdata$SSB[b_key==i]))/max(0.000001,(ab_init[max(a_key)+i]-min(resSR$input$SRdata$SSB[b_key==i])))-1)))
-            }
-          } else {
-            init <- c(init, log(ab_init[(max(a_key)+1):(max(a_key)+max(b_key))]))
-          }
-        }
-      } else {
-        init <- resSR$input$p0
-      }
-
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
@@ -1715,7 +1659,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             opt <- opt2
           }
           #}
-          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
+          #opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
 
         })))
@@ -1734,7 +1678,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             opt <- opt2
           }
           #}
-          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
+          #opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
         })))
       }
