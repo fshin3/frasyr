@@ -43,12 +43,20 @@ SRdata <- get.SRdata(res_vpa)
 regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
 
 regimeSR.list <- list()
+recal_regimeSR.list <- list()
 for(i in 1:nrow(regimeSRmodel.list)){
   regimeSR.list[[i]] <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+  recal_regimeSR.list[[i]] <- check.SRfit(regimeSR.list[[i]])
 }
+
 
 for(i in 1:nrow(regimeSRmodel.list)){
   assign(sprintf("regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), regimeSR.list[[i]])
   savefilename <- sprintf("./inst/extdata/regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
   save(list=paste("regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
-}
+
+  assign(sprintf("recal_regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), recal_regimeSR.list[[i]]$optimum)
+  savefilename <- sprintf("./inst/extdata/recal_regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
+  save(list=paste("recal_regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
+
+  }
