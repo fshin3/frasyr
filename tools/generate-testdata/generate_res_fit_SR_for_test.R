@@ -40,23 +40,44 @@ save(SRpma_HS_L1_AR1_outAR0_repoptT,file=savefilenameresfres)
 data("res_vpa")
 SRdata <- get.SRdata(res_vpa)
 
+SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
+
+for (i in 1:nrow(SRmodel.list)) {
+  resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+
+  assign(sprintf("res_checkSRfit_%s_%s_AR%d_outAR%d",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), check_resSR <- check.SRfit(resSR))
+
+  filename <- sprintf("./inst/extdata/res_checkSRfit_%s_%s_AR%d_outAR%d.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i])
+
+  save(list=paste("res_checkSRfit_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]), sep=""), file=filename)
+}
+
+for (i in 1:nrow(SRmodel.list)) {
+  names(eval(parse(text=paste("res_checkSRfit_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]), sep=""))))
+}
+
+
 regimeSRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), L.type = c("L1", "L2"))
 
 regimeSR.list <- list()
-recal_regimeSR.list <- list()
 for(i in 1:nrow(regimeSRmodel.list)){
   regimeSR.list[[i]] <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
-  recal_regimeSR.list[[i]] <- check.SRfit(regimeSR.list[[i]])
+}
+
+for(i in 1:nrow(regimeSRmodel.list)){
+  recal_regimeSR.list <- check.SRfit(regimeSR.list[[i]])
+  print(sprintf("res_checkSRfit_regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]))
+  assign(sprintf("res_checkSRfit_regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), recal_regimeSR.list)
 }
 
 
 for(i in 1:nrow(regimeSRmodel.list)){
-  assign(sprintf("regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), regimeSR.list[[i]])
+  #assign(sprintf("regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), regimeSR.list[[i]])
   savefilename <- sprintf("./inst/extdata/regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
   save(list=paste("regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
 
-  assign(sprintf("recal_regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), recal_regimeSR.list[[i]]$optimum)
-  savefilename <- sprintf("./inst/extdata/recal_regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
-  save(list=paste("recal_regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
+  assign(sprintf("res_checkSRfit_regimeSR_%s_%s", regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), recal_regimeSR.list[[i]]$optimum)
+  savefilename <- sprintf("./inst/extdata/res_checkSRfit_regimeSR_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
+  save(list=paste("res_checkSRfit_regimeSR_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i], sep=""),file=savefilename)
 
   }
