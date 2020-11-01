@@ -185,15 +185,14 @@ test_that("output value check",{
   # load res_checkSRfit and check them on each resSR ----
   testcontents=c("optim")
 
-  for (i in 1:nrow(SRmodel.list)) {
+  #for (i in 1:nrow(SRmodel.list)) {
 
-    filename <- sprintf("./inst/extdata/res_checkSRfit_%s_%s_AR%d_outAR%d.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i])
-    load(system.file("extdata",filename,package = "frasyr"))
+  #  filename <- sprintf("./inst/extdata/res_checkSRfit_%s_%s_AR%d_outAR%d.rda",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i])
+  #  load(system.file("extdata",filename,package = "frasyr"))
     #load(filename)
-    if(i !=10 ){ # ignoure HS L1 AR1 outAR0
-      print(filename)
-      expect_equal(eval(parse(text=paste("res_checkSRfit_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]),"$",testcontents[1],sep=""))), "Successfully achieving the global optimum")
-    }
+  #  if(i !=10 ){ # ignoure HS L1 AR1 outAR0
+  #    expect_equal(eval(parse(text=paste("res_checkSRfit_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]),"$",testcontents[1],sep=""))), "Successfully achieving the global optimum")
+   # }
 
   }
 
