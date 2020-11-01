@@ -179,7 +179,7 @@ test_that("output value check",{
   for (i in 1:nrow(SRmodel.list)) {
     resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
     checkSRfit.check <- check.SRfit(resSR)
-    assign(sprintf("res_checkSRfit_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), prof.likSR.list.check)
+    assign(sprintf("res_checkSRfit_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), checkSRfit.check)
   }
 
   # load res_checkSRfit and check them on each resSR ----
@@ -207,14 +207,14 @@ test_that("output value check",{
   SRdata <- get.SRdata(res_vpa)
 
   # fitSR & prof.likSR----
-  SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
+  #SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
 
 
-  for (i in 1:nrow(SRmodel.list)) {
-    resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
-    prof.likSR.list.check <- prof.likSR(resSR)
-    assign(sprintf("res_proflikSR_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), prof.likSR.list.check)
-  }
+  #for (i in 1:nrow(SRmodel.list)) {
+  #  resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+  #  prof.likSR.list.check <- prof.likSR(resSR)
+  #  assign(sprintf("res_proflikSR_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), prof.likSR.list.check)
+  #}
 
   # load res_proflikSR and check them on each resSR ----
 
@@ -243,22 +243,23 @@ test_that("output value check",{
   regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
 
   for (i in 1:nrow(regimeSRmodel.list)) {
-    res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
     print(i)
+    res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+    print("prof.likSR")
     prof.likSR.list.check <- prof.likSR(res_regimeSR)
-  #  assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
+    assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
   }
 
   # load res_proflikSRregime and check them on each resSR ----
-  #testcontents =c("prof.lik","ba.grid")
+  testcontents =c("prof.lik","ba.grid")
 
-  #for (i in 1:nrow(regimeSRmodel.list)) {
-  #  filename <- sprintf("res_proflikSRregime_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
-   # load(system.file("extdata",filename,package = "frasyr"))
-  #  for(j in 1:length(testcontents)){
-   #   expect_equal(eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"_check$",testcontents[j],sep=""))))
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    filename <- sprintf("res_proflikSRregime_%s_%s.rda",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i])
+    load(system.file("extdata",filename,package = "frasyr"))
+    for(j in 1:length(testcontents)){
+     expect_equal(eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"$",testcontents[j],sep=""))),eval(parse(text=paste("res_proflikSRregime_",regimeSRmodel.list$SR.rel[i],"_",regimeSRmodel.list$L.type[i],"_check$",testcontents[j],sep=""))))
 
-   # }
-  #}
+    }
+  }
 
 })
