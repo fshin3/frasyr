@@ -1704,18 +1704,19 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
-           #opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-
-          # add rep.opt
-          opt <- optim(init,resSR$obj.f2)
-          #if (rep.opt) {
-          for (i in 1:100) {
-            opt2 <- optim(opt$par,resSR$obj.f2)
-            if (abs(opt$value-opt2$value)<1e-6) break
-            opt <- opt2
+          if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          else{
+            # add rep.opt
+            opt <- optim(init,resSR$obj.f2)
+            #if (rep.opt) {
+            for (i in 1:100) {
+              opt2 <- optim(opt$par,resSR$obj.f2)
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            #}
+            opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           }
-          #}
-          opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
 
         })))
@@ -1723,18 +1724,20 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*0.001,
           #             upper=x*1000,method="L-BFGS-B")
-           opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          else{
+            # add rep.opt
+            opt <- optim(init,resSR$obj.f2)
+            #if (rep.opt) {
+            for (i in 1:100) {
+              opt2 <- optim(opt$par,resSR$obj.f2)
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            #}
+            opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
 
-          # add rep.opt
-          #opt <- optim(init,resSR$obj.f2)
-          #if (rep.opt) {
-          #for (i in 1:100) {
-          #  opt2 <- optim(opt$par,resSR$obj.f2)
-          #  if (abs(opt$value-opt2$value)<1e-6) break
-          #  opt <- opt2
-          #}
-          #}
-          #opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
+          }
           opt$value
         })))
       }
