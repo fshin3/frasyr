@@ -242,11 +242,12 @@ test_that("output value check",{
   # fitSRregime & prof.likSR----
   regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
 
-  #for (i in 1:nrow(regimeSRmodel.list)) {
-  #  res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
-  #  prof.likSR.list.check <- prof.likSR(res_regimeSR)
+  for (i in 1:nrow(regimeSRmodel.list)) {
+    res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
+    print(i)
+    prof.likSR.list.check <- prof.likSR(res_regimeSR)
   #  assign(sprintf("res_proflikSRregime_%s_%s_check",regimeSRmodel.list$SR.rel[i],regimeSRmodel.list$L.type[i]), prof.likSR.list.check)
-  #}
+  }
 
   # load res_proflikSRregime and check them on each resSR ----
   #testcontents =c("prof.lik","ba.grid")
