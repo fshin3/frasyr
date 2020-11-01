@@ -1615,6 +1615,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
     prof.lik.res = NULL
     ba.grid.res = list()
     for (j in 1:nrow(resSR$regime_pars)) {
+      j<-2
       a.grid <- seq(resSR$regime_pars$a[j]*a_range[1],resSR$regime_pars$a[j]*a_range[2],length=length)
       if (resSR$input$SR!="HS"|| !isTRUE(HS_b_restrict)) {
         b.grid <- seq(resSR$regime_pars$b[j]*b_range[1],resSR$regime_pars$b[j]*b_range[2],length=length)
@@ -1646,6 +1647,8 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       }
 
       # add objects for rep.opt
+      rec <- resSR$input$SRdata$R
+      ssb <- resSR$input$SRdata$SSB
       N <- length(resSR$input$SRdata$R)
       regime.key0 = resSR$input$regime.key
       unique.key = unique(resSR$input$regime.key)
@@ -1662,13 +1665,28 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       if ("b" %in% resSR$input$regime.par) b_key <- regime
       if ("sd" %in% resSR$input$regime.par) sd_key <- regime
 
+      a_grid <- NULL
+      for(i in unique(a_key)){
+        a_range<-range(rec[a_key==i]/ssb[a_key==i])
+        a_grid <- cbind(a_grid,seq(a_range[1],a_range[2],length=length))
+      }
+      b_grid <- NULL
+      for(i in unique(b_key)){
+        if (resSR$input$SR=="HS") {
+          b_range <- range(ssb[b_key==i])
+        } else {b_range <- range(1/ssb[b_key==i])}
+        b_grid <- cbind(b_grid,seq(b_range[1],b_range[2],length=length))
+      }
+      ab_grid <- expand.grid(data.frame(a_grid,b_grid)) %>% as.matrix()
 
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
-          if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-          else{
-            init <- c(rep(log(ba.grid[i,2]),max(a_key)),rep(log(ba.grid[i,1]),max(b_key)))
+          #if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          #else{
+          init <- resSR$opt$par
+          init[j] <- log(ba.grid[i,2])
+          init[max(a_key)+j] <- log(ba.grid[i,1])
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
@@ -1679,7 +1697,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             }
             #}
             opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
-          }
+          #}
           opt$value
 
         })))
@@ -1687,9 +1705,11 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*0.001,
           #             upper=x*1000,method="L-BFGS-B")
-          if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-          else{
-            init <- c(rep(log(ba.grid[i,2]),max(a_key)),rep(log(ba.grid[i,1]),max(b_key)))
+          #if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          #else{
+          init <- resSR$opt$par
+          init[j] <- log(ba.grid[i,2])
+          init[max(a_key)+j] <- log(ba.grid[i,1])
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
@@ -1701,7 +1721,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             #}
             opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
 
-          }
+          #}
           opt$value
         })))
       }
