@@ -1691,7 +1691,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
-            for (i in 1:100) {
+            for (k in 1:100) {
               opt2 <- optim(opt$par,resSR$obj.f2)
               if (abs(opt$value-opt2$value)<1e-6) break
               opt <- opt2
@@ -1711,7 +1711,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
-            for (i in 1:100) {
+            for (k in 1:100) {
               opt2 <- optim(opt$par,resSR$obj.f2)
               if (abs(opt$value-opt2$value)<1e-6) break
               opt <- opt2
