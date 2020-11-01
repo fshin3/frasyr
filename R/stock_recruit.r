@@ -1678,25 +1678,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       #b_range_repopt <- apply(b.grid,2,range)
 
       if (is.null(resSR$input$p0)) {
-        use.fit.SR = TRUE # fit.SRを使うことにする。
-        #if (use.fit.SR) {
-          fit_SR_res = fit.SR(resSR$input$SRdata, SR = resSR$input$SR, method = resSR$input$method, w = resSR$input$w, AR = 0)
-          init <- c(rep(fit_SR_res$opt$par[1],max(a_key)),rep(fit_SR_res$opt$par[2],max(b_key)))
-        #} else {
-        #  init_list <- sapply(1:nrow(ab_grid), function(j) {
-        #    obj.f(a=ab_grid[j,1:max(a_key)],b=ab_grid[j,(1+max(a_key)):(max(a_key)+max(b_key))])
-        #  })
-
-        #  ab_init <- as.numeric(ab_grid[which.min(init_list),])
-        #  init <- log(ab_init[1:max(a_key)])
-        #  if (resSR$input$SR=="HS") {
-        #    for(i in unique(b_key)) {
-        #      init <- c(init,-log(max(0.000001,(max(resSR$input$SRdata$SSB[b_key==i])-min(resSR$input$SRdata$SSB[b_key==i]))/max(0.000001,(ab_init[max(a_key)+i]-min(resSR$input$SRdata$SSB[b_key==i])))-1)))
-        #    }
-        #  } else {
-        #    init <- c(init, log(ab_init[(max(a_key)+1):(max(a_key)+max(b_key))]))
-        #  }
-        #}
+          init <- c(rep(resSR$opt$par[j],max(a_key)),rep(resSR$opt$par[nrow(resSR$regime_pars)+j],max(b_key)))
       } else {
         init <- resSR$input$p0
       }
