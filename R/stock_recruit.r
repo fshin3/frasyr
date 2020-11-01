@@ -1662,32 +1662,13 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
       if ("b" %in% resSR$input$regime.par) b_key <- regime
       if ("sd" %in% resSR$input$regime.par) sd_key <- regime
 
-      #a_grid_repopt <- NULL
-      #for(i in unique(a_key)){
-      #  a_range_repopt<-range(resSR$input$SRdata$R[a_key==i]/resSR$input$SRdata$SSB[a_key==i])
-      #  a_grid_repopt <- cbind(a_grid_repopt,seq(a_range_repopt[1],a_range_repopt[2],length=resSR$input$length))
-      #}
-      #b_grid_repopt <- NULL
-      #for(i in unique(b_key)){
-      #  if (resSR$input$SR=="HS") {
-      #    b_range_repopt <- range(resSR$input$SRdata$SSB[b_key==i])
-      #  } else {b_range_repopt <- range(1/resSR$input$SRdata$SSB[b_key==i])}
-      #  b_grid_repopt <- cbind(b_grid_repopt,seq(b_range_repopt[1],b_range_repopt[2],length=resSR$input$length))
-      #}
-      ab_grid <- expand.grid(data.frame(a.grid,b.grid)) %>% as.matrix()
-      #b_range_repopt <- apply(b.grid,2,range)
-
-      if (is.null(resSR$input$p0)) {
-          init <- c(rep(resSR$opt$par[j],max(a_key)),rep(resSR$opt$par[nrow(resSR$regime_pars)+j],max(b_key)))
-      } else {
-        init <- resSR$input$p0
-      }
 
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
           if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           else{
+            init <- c(rep(log(ba.grid[i,2]),max(a_key)),rep(log(ba.grid[i,1]),max(b_key)))
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
@@ -1708,6 +1689,7 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
           #             upper=x*1000,method="L-BFGS-B")
           if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           else{
+            init <- c(rep(log(ba.grid[i,2]),max(a_key)),rep(log(ba.grid[i,1]),max(b_key)))
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
