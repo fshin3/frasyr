@@ -1576,7 +1576,7 @@ jackknife.SR = function(resSR,is.plot=TRUE,use.p0 = TRUE, output=FALSE,filename 
 #' @param length 範囲を区切る数
 #' @encoding UTF-8
 #' @export
-prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range = NULL,b_range = NULL,HS_b_restrict = TRUE,length=50) {
+prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range = c(0.5,2),b_range = c(0.5,2),HS_b_restrict = TRUE,length=50) {
   RES = list()
   if (is.null(a_range)) a_range = c(0.5,2)
   if (is.null(b_range)) b_range = c(0.5,2)
@@ -1667,9 +1667,9 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
           if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           else{
-          init <- resSR$opt$par
-          init[j] <- log(ba.grid[i,2])
-          init[max(a_key)+j] <- log(ba.grid[i,1])
+            init <- resSR$opt$par
+            init[j] <- log(ba.grid[i,2])
+            init[max(a_key)+j] <- log(ba.grid[i,1])
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
@@ -1690,9 +1690,9 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
           #             upper=x*1000,method="L-BFGS-B")
           if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           else{
-          init <- resSR$opt$par
-          init[j] <- log(ba.grid[i,2])
-          init[max(a_key)+j] <- log(ba.grid[i,1])
+            init <- resSR$opt$par
+            init[j] <- log(ba.grid[i,2])
+            init[max(a_key)+j] <- log(ba.grid[i,1])
             # add rep.opt
             opt <- optim(init,resSR$obj.f2)
             #if (rep.opt) {
@@ -1703,7 +1703,6 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
             }
             #}
             opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
-
           }
           opt$value
         })))
