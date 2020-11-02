@@ -176,11 +176,11 @@ test_that("output value check",{
   SRmodel.list <- expand.grid(SR.rel = c("HS","BH","RI"), AR.type = c(0, 1), out.AR=c(TRUE,FALSE), L.type = c("L1", "L2"))
 
 
-  for (i in 1:nrow(SRmodel.list)) {
-    resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
-    checkSRfit.check <- check.SRfit(resSR)
-    assign(sprintf("res_checkSRfit_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), checkSRfit.check)
-  }
+  #for (i in 1:nrow(SRmodel.list)) {
+  #  resSR <- fit.SR(SRdata, SR = SRmodel.list$SR.rel[i], method = SRmodel.list$L.type[i], AR = SRmodel.list$AR.type[i], out.AR =SRmodel.list$out.AR[i], hessian = FALSE)
+  #  checkSRfit.check <- check.SRfit(resSR)
+  #  assign(sprintf("res_checkSRfit_%s_%s_AR%d_outAR%d_check",SRmodel.list$SR.rel[i],SRmodel.list$L.type[i], SRmodel.list$AR.type[i],SRmodel.list$out.AR[i]), checkSRfit.check)
+  #}
 
   # load res_checkSRfit and check them on each resSR ----
   testcontents=c("optim")
@@ -194,7 +194,7 @@ test_that("output value check",{
   #    expect_equal(eval(parse(text=paste("res_checkSRfit_",SRmodel.list$SR.rel[i],"_",SRmodel.list$L.type[i],"_AR", SRmodel.list$AR.type[i],"_outAR",as.numeric(SRmodel.list$out.AR[i]),"$",testcontents[1],sep=""))), "Successfully achieving the global optimum")
    # }
 
-  }
+  #}
 
 })
 
@@ -242,7 +242,6 @@ test_that("output value check",{
   regimeSRmodel.list <- expand.grid(SR.rel = c("HS"), L.type = c("L1", "L2"))
 
   for (i in 1:nrow(regimeSRmodel.list)) {
-    print(i)
     res_regimeSR <- fit.SRregime(SRdata,SR=regimeSRmodel.list$SR.rel[i],method = regimeSRmodel.list$L.type[i],regime.year = 2005, use.fit.SR = TRUE, regime.key = c(0,1))
     print("prof.likSR")
     prof.likSR.list.check <- prof.likSR(res_regimeSR)
