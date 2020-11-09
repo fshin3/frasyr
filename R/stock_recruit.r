@@ -1576,7 +1576,7 @@ jackknife.SR = function(resSR,is.plot=TRUE,use.p0 = TRUE, output=FALSE,filename 
 #' @param length 範囲を区切る数
 #' @encoding UTF-8
 #' @export
-prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range = NULL,b_range = NULL,HS_b_restrict = TRUE,length=50) {
+prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range = c(0.5,2),b_range = c(0.5,2),HS_b_restrict = TRUE,length=50) {
   RES = list()
   if (is.null(a_range)) a_range = c(0.5,2)
   if (is.null(b_range)) b_range = c(0.5,2)
@@ -1645,21 +1645,42 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         resSR$obj.f(a=a,b=b)
       }
 
+      # add objects for rep.opt
+      N <- length(resSR$input$SRdata$R)
+      regime.key0 = resSR$input$regime.key
+      unique.key = unique(resSR$input$regime.key)
+      regime.key = sapply(1:length(regime.key0), function(i) which(unique.key == regime.key0[i]))
+      regime <- a_key <- b_key <- sd_key <- rep(1,N)
+
+      if (!is.null(resSR$input$regime.year)) {
+        for(i in 1:length(resSR$input$regime.year)) {
+          regime[resSR$input$SRdata$year>=resSR$input$regime.year[i]] <- regime.key[i+1]
+        }
+      }
+
+      if ("a" %in% resSR$input$regime.par) a_key <- regime
+      if ("b" %in% resSR$input$regime.par) b_key <- regime
+      if ("sd" %in% resSR$input$regime.par) sd_key <- regime
+
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
-           opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-
-          # add rep.opt
-          #opt <- optim(init,resSR$obj.f2)
-          #if (rep.opt) {
-          for (i in 1:100) {
-            opt2 <- optim(opt$par,resSR$obj.f2)
-            if (abs(opt$value-opt2$value)<1e-6) break
-            opt <- opt2
-          }
+          #if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          #else{
+            init <- log(c(resSR$pars$a, resSR$pars$b))
+            init[j] <- log(ba.grid[i,2])
+            init[max(a_key)+j] <- log(ba.grid[i,1])
+            # add rep.opt
+            opt <- optim(init,resSR$obj.f2)
+            #if (rep.opt) {
+            for (k in 1:100) {
+              opt2 <- optim(opt$par,resSR$obj.f2)
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            #}
+            opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           #}
-          #opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
 
         })))
@@ -1667,18 +1688,22 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*0.001,
           #             upper=x*1000,method="L-BFGS-B")
-           opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-
-          # add rep.opt
-          #opt <- optim(init,resSR$obj.f2)
-          #if (rep.opt) {
-          for (i in 1:100) {
-            opt2 <- optim(opt$par,resSR$obj.f2)
-            if (abs(opt$value-opt2$value)<1e-6) break
-            opt <- opt2
-          }
+          #if(resSR$input$SR=="HS") opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
+          #else{
+            init <- log(c(resSR$pars$a, resSR$pars$b))
+            init[j] <- log(ba.grid[i,2])
+            init[max(a_key)+j] <- log(ba.grid[i,1])
+            # add rep.opt
+            opt <- optim(init,resSR$obj.f2)
+            #if (rep.opt) {
+            for (k in 1:100) {
+              opt2 <- optim(opt$par,resSR$obj.f2)
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            #}
+            opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           #}
-          #opt <- optim(opt$par,resSR$obj.f2,method="BFGS",hessian=resSR$input$hessian)
           opt$value
         })))
       }
@@ -2058,4 +2083,3 @@ calc_steepness = function(SR="HS",rec_pars,M,waa,maa,plus_group=TRUE) {
   Res = data.frame(SPR0 = SPR0, SB0 = SB0, R0 = R0, B0 = B0, h = h)
   return(Res)
 }
-
