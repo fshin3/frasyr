@@ -1645,10 +1645,6 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         resSR$obj.f(a=a,b=b)
       }
 
-      if ("a" %in% resSR$input$regime.par) a_key <- regime
-      if ("b" %in% resSR$input$regime.par) b_key <- regime
-      if ("sd" %in% resSR$input$regime.par) sd_key <- regime
-
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
