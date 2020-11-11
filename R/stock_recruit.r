@@ -1645,18 +1645,24 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
         resSR$obj.f(a=a,b=b)
       }
 
+
       if (length(x)==1) {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
           # opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],lower=x*1.0e-3,upper=x*1.0e+3,method="Brent")
           if(resSR$input$SR=="HS") {
             opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-            opt$value
           }
           else{
-            opt <- obj.f(par_a=ba.grid[i,2],par_b=ba.grid[i,1],x)
-            opt
+            x <- c(resSR$pars$a,resSR$pars$b)
+            opt <- optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1])
+            for (k in 1:100) {
+              opt2 <- optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1])
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           }
-
+          opt$value
         })))
       } else {
         prof.lik.res <- cbind(prof.lik.res,exp(-sapply(1:nrow(ba.grid), function(i) {
@@ -1664,12 +1670,18 @@ prof.likSR = function(resSR,output=FALSE,filename="Profile_Likelihood",a_range =
           #             upper=x*1000,method="L-BFGS-B")
           if(resSR$input$SR=="HS") {
             opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
-            opt$value
           }
           else{
-            opt <- obj.f(par_a=ba.grid[i,2],par_b=ba.grid[i,1],x)
-            opt
+            x <- c(resSR$pars$a,resSR$pars$b)
+            opt <- optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1])
+            for (k in 1:100) {
+              opt2 <- optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1])
+              if (abs(opt$value-opt2$value)<1e-6) break
+              opt <- opt2
+            }
+            opt = optim(x,obj.f,par_a=ba.grid[i,2],par_b=ba.grid[i,1],method="BFGS")
           }
+          opt$value
         })))
       }
       ba.grid.res[[j]] <- ba.grid
