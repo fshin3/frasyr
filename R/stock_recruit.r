@@ -1874,7 +1874,7 @@ check.SRfit = function(resSR,n=100,sigma=5,seed = 1,output=FALSE,filename="check
            if (class(resSR)=="fit.SR" && resSR$pars$rho != 0) {
              rho_diff = c(rho_diff,max(abs(resSR_list[[i]]$pars$rho/resSR$pars$rho-1))*100)
            }
-           if(a_diff+sd_diff+rho_diff > 0.001) problem = c(problem,TRUE)
+           if(a_diff+sd_diff+rho_diff > 0.1) problem = c(problem,TRUE)
            b_estimates <- as.data.frame(cbind(resSR_list[[i]]$pars$b,resSR$pars$b))
            names(b_estimates) <- c("by check.SRfit","by fit.SR")
         #}
