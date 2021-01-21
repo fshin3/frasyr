@@ -1859,7 +1859,7 @@ check.SRfit = function(resSR,n=100,sigma=5,seed = 1,output=FALSE,filename="check
     loglik_diff = purrr::map_dbl(loglik, function(x) abs(diff(c(x,max(loglik)))))
     problem = NULL
     diff_threshold = 1.0e-6
-    # a_diff = NULL; b_diff = NULL; sd_diff = NULL; rho_diff = NULL
+     a_diff = NULL; b_diff = NULL; sd_diff = NULL; rho_diff = NULL
     for (i in 1:n) {
       if (loglik_diff[i] < diff_threshold) {
         #if (all(abs(pars[i,] - resSR$opt$par) < 0.001)) {
