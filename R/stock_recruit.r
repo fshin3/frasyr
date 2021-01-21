@@ -1875,6 +1875,8 @@ check.SRfit = function(resSR,n=100,sigma=5,seed = 1,output=FALSE,filename="check
              rho_diff = c(rho_diff,max(abs(resSR_list[[i]]$pars$rho/resSR$pars$rho-1))*100)
            }
            if(a_diff+sd_diff+rho_diff > 0.001) problem = c(problem,TRUE)
+           b_estimates <- as.data.frame(cbind(resSR_list[[i]]$pars$b,resSR$pars$b))
+           names(b_estimates) <- c("by check.SRfit","by fit.SR")
         #}
       } else {
         problem = c(problem,FALSE)
@@ -1897,6 +1899,7 @@ check.SRfit = function(resSR,n=100,sigma=5,seed = 1,output=FALSE,filename="check
       par_summary = apply(par_list,2,summary)
       percent_bias_summary = apply(bias_list,2,summary)
       RES$par_summary <- par_summary
+      RES$b_estimates <- b_estimates
       RES$percent_bias_summary <- percent_bias_summary
     } else {
       cat(RES$pars <- "Parameters successfully achieving the single solution","\n")
