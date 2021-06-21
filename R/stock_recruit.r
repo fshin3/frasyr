@@ -1565,7 +1565,7 @@ autocor.plot = function(resSR,use.resid=1,lag.max=NULL,output = FALSE,filename =
 #' @param filename ファイル名
 #' @encoding UTF-8
 #' @export
-bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1.2,pch=1,ggplt=FALSE,...) {
+bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1.2,pch=1,ggplt=TRUE,...) {
   res_base = boot.res$input$Res
   if (class(boot.res$input$Res)=="fit.SR") {
     validate_sr(res_sr = boot.res$input$Res)
@@ -1610,13 +1610,13 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
         }
       }
 
-      boot_par_hist <-ggplot(res_boot_par_tibble) + geom_histogram(aes(x=value)) + facet_wrap(.~fct_inorder(name_with_CI), scale="free")+theme_SH(legend.position="bottom")  + labs(title=plot_bootsr_title)+
+      boot_par_hist <- ggplot(res_boot_par_tibble) + geom_histogram(aes(x=value)) + facet_wrap(.~fct_inorder(name_with_CI), scale="free")+theme_SH(legend.position="bottom")  + labs(title=plot_bootsr_title) +
         geom_vline(data=res_boot_par_base, mapping = aes(xintercept=value,color=stats),linetype=base_linetype) +
         geom_vline(data=res_boot_par_tibble_summary, mapping = aes(xintercept=value,color=stats),linetype="dashed") +
         scale_color_manual(name="stats",values = plot_col) #+
       #scale_linetype_manual(name="",values = plot_bootsr_linetype) #+ #scale_color_discrete(name="stats",breaks=legend.labels)
-      if (output) ggsave(file = paste0(filename,"_pars.png"), plot=boot_par_hist, width=10, height=10,  units='in')
 
+      if (output) ggsave(file = paste0(filename,"_pars.png"), plot=boot_par_hist, width=10, height=10,  units='in')
     }
     else { #plot not using ggplot
       if (output) png(file = paste0(filename,"_pars.png"), width=10, height=10, res=432, units='in')
@@ -1675,7 +1675,6 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
 
     }
 
-
     # SR curve ----
     par(mfrow=c(1,1),pch=pch,lwd = lwd)
     if (output) png(file = paste0(filename,"_SRcurve.png"), width=10, height=7.5, res=432, units='in')
@@ -1705,7 +1704,7 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
 
     if(ggplt){ # plot using ggplot
       res_base = boot.res$input$Res
-
+      N <- boot.res$input$n
       res_boot_par_tibble <- purrr::map_dfr(boot.res[1:N], convert_SR_tibble) %>% dplyr::filter(type=="parameter"&name!="SPR0")
 
       legend.labels <- c("estimated", "CI10", "CI90","mean","median")
@@ -1715,7 +1714,7 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
       plot_bootsr_linetype <- rep(bootsr_linetype,length(levels(as.factor(res_boot_par_tibble$name))))
 
       regime.num <- length(levels(as.factor(res_boot_par_tibble$regime)))-1
-
+      boot_par_hist.regime<-list()
       for(k in 0:regime.num){
         if (boot.res$input$method=="d") {
           plot_bootsr_title<- paste0("Data Bootstrap regime",k)
@@ -1726,7 +1725,6 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
             plot_bootsr_title<- paste0("Non-Parametric Bootstrap regime",k)
           }
         }
-
 
         res_boot_par_tibble_regime<- res_boot_par_tibble %>% filter(regime==k)
 
@@ -1748,10 +1746,10 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
           geom_vline(data=res_boot_par_base, mapping = aes(xintercept=value,color=stats),linetype=base_linetype) +
           geom_vline(data=res_boot_par_tibble_summary, mapping = aes(xintercept=value,color=stats),linetype="dashed") +
           scale_color_manual(name="stats",values = plot_col)
+
+        boot_par_hist.regime[[k+1]] <- boot_par_hist
         if (output) ggsave(file = paste0(filename,"_regime",k,"_pars.png"), plot=boot_par_hist, width=10, height=10,  units='in')
-
       }
-
     }
     else{ # plot not using ggplot
 
@@ -1819,7 +1817,6 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
       if (output) dev.off()
     }
     }
-
     # SR curve -----
     if (output) png(file = paste0(filename,"_SRcurve.png"), width=7.5*length(regime_unique), height=7.5, res=432, units='in')
     par(mfrow=c(1,length(regime_unique)))
@@ -1844,6 +1841,17 @@ bootSR.plot = function(boot.res, CI = 0.8,output = FALSE,filename = "boot",lwd=1
       points(pred_data$SSB,pred_data$R,col=2,type="l",lwd=3)
     }
     if (output) dev.off()
+  }
+
+  if (ggplt){
+    if (class(boot.res$input$Res)=="fit.SR"){
+      boot_par_hist
+    }
+    else{
+      for(k in 0:regime.num){
+        boot_par_hist.regime[[k+1]]
+      }
+    }
   }
 
 }
